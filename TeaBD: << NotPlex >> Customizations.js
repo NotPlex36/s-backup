@@ -32,22 +32,16 @@
 
     const tbdFeature = {
         isActive: false,
-        nextTorrent: 'Jigra 2024 720p WEBRip AAC5.1 x264 ESub-HDHub4u',
+        nextTorrent: '', // Torrent Title here
         readyToBeQueued: {
             'Torrent Title': 'Torrent Link',
+            // queue list
             'Jigra 2024 720p WEBRip AAC5.1 x264 ESub-HDHub4u': 'https://www.torrentbd.net/torrents-details.php?id=1222972',
         },
         alreadyFeatured: {
             'Queue Added Date': 'Torrent Link',
-            'May 26, 2023 06:14 am': 'https://www.torrentbd.net/torrents-details.php?id=1116900',
-            'Dec 22, 2023 08:53 am': 'https://www.torrentbd.net/torrents-details.php?id=1150381',
-            'Dec 12, 2024 03:38 am': 'https://www.torrentbd.net/torrents-details.php?id=1189363',
-            'Dec 26, 2024 11:58 pm': 'https://www.torrentbd.net/torrents-details.php?id=1182875',
-            'Jan 03, 2025 12:54 pm': 'https://www.torrentbd.net/torrents-details.php?id=1173263',
-            'Jan 12, 2025 12:18 am': 'https://www.torrentbd.net/torrents-details.php?id=1222217',
-            'Jan 20, 2025 12:27 am': 'https://www.torrentbd.net/torrents-details.php?id=1190428',
-            'Jan 29, 2025 12:11 am': 'https://www.torrentbd.net/torrents-details.php?id=1172783',
-        }
+            // post done links
+            }
     }
 
     // Add More Options (Direct Links) to Menu Bar
