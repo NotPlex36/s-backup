@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         TeaBD: << NotPlex >> Customizations
 // @namespace    http://tampermonkey.net/
-// @version      2.1
+// @version      2.5.1
 // @description  More options in Menu Bar. Replace unnecessary content. Proper file type in Torrent Upload Page. Neighbours (Profile/Torrent). SB Summary Table.
 // @author       NotPlex
 // @match        https://www.torrentbd.net/*
@@ -32,16 +32,22 @@
 
     const tbdFeature = {
         isActive: false,
-        nextTorrent: '', // Torrent Title here
+        nextTorrent: 'Jigra 2024 720p WEBRip AAC5.1 x264 ESub-HDHub4u',
         readyToBeQueued: {
             'Torrent Title': 'Torrent Link',
-            // queue list
             'Jigra 2024 720p WEBRip AAC5.1 x264 ESub-HDHub4u': 'https://www.torrentbd.net/torrents-details.php?id=1222972',
         },
         alreadyFeatured: {
             'Queue Added Date': 'Torrent Link',
-            // post done links
-            }
+            'May 26, 2023 06:14 am': 'https://www.torrentbd.net/torrents-details.php?id=1116900',
+            'Dec 22, 2023 08:53 am': 'https://www.torrentbd.net/torrents-details.php?id=1150381',
+            'Dec 12, 2024 03:38 am': 'https://www.torrentbd.net/torrents-details.php?id=1189363',
+            'Dec 26, 2024 11:58 pm': 'https://www.torrentbd.net/torrents-details.php?id=1182875',
+            'Jan 03, 2025 12:54 pm': 'https://www.torrentbd.net/torrents-details.php?id=1173263',
+            'Jan 12, 2025 12:18 am': 'https://www.torrentbd.net/torrents-details.php?id=1222217',
+            'Jan 20, 2025 12:27 am': 'https://www.torrentbd.net/torrents-details.php?id=1190428',
+            'Jan 29, 2025 12:11 am': 'https://www.torrentbd.net/torrents-details.php?id=1172783',
+        }
     }
 
     // Add More Options (Direct Links) to Menu Bar
@@ -193,7 +199,7 @@
                  transition: background-color 0.05s ease-in;
             }
             .otp-btn-hovered.otp-btn{
-                 cursor: default;
+                 cursor: pointer;
             }
             @media screen and (max-width: 1279px) {
                  .otp-hidden {
@@ -217,7 +223,11 @@
             insertDivInPosition({
                 classList: 'otp-my-auto otp-hidden',
                 innerHTML: `<a href='/account-details.php?id=${currAccId - 1 > 0 ? currAccId - 1 : 1}' class='otp-btn' title='Previous Profile'>◄◄ ${currAccId - 1 > 0 ? 'Previous' : 'Go to first account'}</a>
-                     <span title="${ isNaN(currAccIdURL) || currAccIdURL === userId ? 'Your Profile' : 'Current Profile'}" class='otp-btn otp-btn-hovered otp-mx-1.25'>Current Profile #${currAccId}</span>
+                     <span title="Click to copy current profile ID"
+                           class='otp-btn otp-btn-hovered otp-mx-1.25'
+                           onclick="navigator.clipboard.writeText('Torrent ID: ${currAccId}'); alert('Account ID #${currAccId} copied.');">
+                                Current Profile #${currAccId}
+                           </span>
                      <a href='/account-details.php?id=${currAccId + 1 > 0 ? currAccId + 1 : 1}' class='otp-btn' title='Next Profile'>Next ►►</a>`,
                 parentNode: cnavElement,
                 childrenNo: 3,
@@ -233,8 +243,12 @@
             insertDivInPosition({
                 classList: 'otp-my-auto otp-hidden',
                 innerHTML: `<a href='/torrents-details.php?id=${currTorrId - 1 > 0 ? currTorrId - 1 : 1}' class='otp-btn' title='Previous Torrent'>◄◄ ${currTorrId - 1 > 0 ? 'Previous' : 'Go to first Torrent'}</a>
-                     <span title="Current Torrent" class='otp-btn otp-btn-hovered otp-mx-1.25'>Current Torrent #${currTorrId}</span>
-                     <a href='/torrents-details.php?id=${currTorrId + 1 > 0 ? currTorrId + 1 : 1}' class='otp-btn' title='Next Torrent'>Next ►►</a>`,
+                     <span title="Click to copy current torrent ID"
+                           class='otp-btn otp-btn-hovered otp-mx-1.25'
+                           onclick="navigator.clipboard.writeText('Torrent ID: ${currTorrId}'); alert('Torrent ID #${currTorrId} copied.');">
+                                Current Torrent #${currTorrId}
+                           </span>
+                     <a href='/torrents-details.php?id=${ currTorrId + 1 > 0 ? currTorrId + 1 : 1 }' class='otp-btn' title='Next Torrent'>Next ►►</a>`,
                 parentNode: cnavElement,
                 childrenNo: 3,
             });
@@ -246,7 +260,7 @@
         const createSBRateSummeryTableBody = (tableDataObj) => {
             const tableRow = Object.keys(tableDataObj);
             return tableRow.map(rowTitle => {
-                const {size, sbRate, count, currentRateTotal} = tableDataObj[rowTitle] || {};
+                const { size, sbRate, count, currentRateTotal } = tableDataObj[rowTitle] || {};
                 return `<tr>
                              <td style='padding: 5px; text-align: center;'>${ size }</td>
                              <td style='padding: 5px; text-align: center;'>${ sbRate || 'none' }</td>
@@ -254,13 +268,15 @@
                              <td style='padding: 5px; text-align: center;'>${ new Intl.NumberFormat("en-IN").format((sbRate * count).toFixed(2)) || 'none' }</td>
                              <td style='padding: 5px; text-align: right; padding-right: 8px;'>${ new Intl.NumberFormat("en-IN").format((currentRateTotal || sbRate * count).toFixed(2)) || 'none' }</td>
                         </tr>`;
-            });
+            }).join('');
         }
 
         try {
-
             window.addEventListener('load', () => {
-                const currSeedingRows = Array.from(document.querySelectorAll('.table.boxed.simple-data-table tr')).filter(tr => !isNaN(+tr.lastElementChild.innerText)),
+                const sbBreakdownTableElement = document.querySelector('.table.boxed.simple-data-table');
+                if(!sbBreakdownTableElement) throw new Error('SeedBonus Breakdown Table Not Found!');
+
+                const currSeedingRows = Array.from(sbBreakdownTableElement.querySelectorAll('tr')).filter(tr => !isNaN(+tr.lastElementChild.innerText)),
                       smallTorrentCount = parseInt(document.querySelector('.uc-seeding').innerText) - currSeedingRows.length;
 
                 const tableData = {
@@ -299,12 +315,10 @@
                     }
                 });
 
-                console.table(tableData);
-
                 const table = document.createElement('table');
                 table.classList = 'table boxed striped simple-data-table ';
                 table.style = 'width: 65%; min-width: 720px; margin-left: auto; margin-right: auto; margin-bottom: 28px;';
-                table.innerHTML = `<caption style='font-size: 24px; font-weight: 700; margin-bottom: 12px;' class='tbdrank vip'>Summary</caption>
+                table.innerHTML = `<caption style='font-size: 24px; font-weight: 700; margin-bottom: 12px;' class='tbdrank supreme'>Summary</caption>
                            <thead>
                                 <tr style='background-color: #2a2a2a;'>
                                      <th style='padding: 5px; text-align: center;'>Torrent Size</th>
@@ -319,20 +333,20 @@
                                 <tr style='font-weight: 700; background-color: #2a2a2a;'>
                                      <td style='padding: 5px; padding-left: 8px; font-size: 1.25rem;' colspan='2'>Total</th>
                                      <td style='padding: 5px; text-align: center; color: #66bb6a;'
-                                         title='This value may not count torrents that is less than 100MiB'>↑ ${ Object.keys(tableData).reduce((torrCount, curr) => torrCount + tableData[curr].count, 0) }</th>
+                                         title='This total may not count torrents less than 100MiB'>↑ ${ Object.keys(tableData).reduce((torrCount, curr) => torrCount + tableData[curr].count, 0) }</th>
                                      <td style='padding: 5px; text-align: center;'>${ new Intl.NumberFormat("en-IN").format(tableObjKeys.reduce((total, curr) => total + tableData[curr].count * tableData[curr].sbRate, 0)) }</th>
-                                     <td style='padding: 5px; text-align: right; padding-right: 8px; font-size: 1.25rem;' class='tbdrank elite-uploader'
-                                         title='This is your current SeedBonus rate (Value may vary upto ±0.5%)'>&#8776 <u>
-                                     ${new Intl.NumberFormat("en-IN").format(+currSeedingRows.map(tr => +tr.lastElementChild.innerText)
-                                                                             .reduce((acc, curr) => acc+curr, 0).toFixed(1))}</u>
+                                     <td style='padding: 5px; text-align: right; padding-right: 8px; font-size: 1.25rem;' class='tbdrank vip'
+                                         title='This is your current SeedBonus rate (Value may vary upto ±0.1%)'>&#8776 <span style='text-decoration: underline;'>
+                                     ${ new Intl.NumberFormat("en-IN").format(+currSeedingRows.map(tr => +tr.lastElementChild.innerText)
+                                                                             .reduce((acc, curr) => acc+curr, 0).toFixed(1)) }</span>
                                      </td>
                                 </tr>
                            </tbody>`;
                 document.querySelector('#middle-block .card-panel.overflow-x').prepend(table);
             })
         }
-        catch(e) {
-            console.error(e);
+        catch(error) {
+            console.log(error);
         }
     }
 
