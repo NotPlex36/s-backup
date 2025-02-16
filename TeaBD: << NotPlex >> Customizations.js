@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         TeaBD: << NotPlex >> Customizations
 // @namespace    http://tampermonkey.net/
-// @version      2.5.1
+// @version      2.5.2
 // @description  More options in Menu Bar. Replace unnecessary content. Proper file type in Torrent Upload Page. Neighbours (Profile/Torrent). SB Summary Table.
 // @author       NotPlex
 // @match        https://www.torrentbd.net/*
@@ -32,10 +32,10 @@
 
     const tbdFeature = {
         isActive: false,
-        nextTorrent: 'Jigra 2024 720p WEBRip AAC5.1 x264 ESub-HDHub4u',
+        nextTorrent: 'Yo Yo Honey Singh: Famous 2024 1080p WEBRip AAC5.1 x264 ESub-HDHub4u', // Next Torrent Title
         readyToBeQueued: {
             'Torrent Title': 'Torrent Link',
-            'Jigra 2024 720p WEBRip AAC5.1 x264 ESub-HDHub4u': 'https://www.torrentbd.net/torrents-details.php?id=1222972',
+            'Yo Yo Honey Singh: Famous 2024 1080p WEBRip AAC5.1 x264 ESub-HDHub4u': 'https://www.torrentbd.net/torrents-details.php?id=1226781',
         },
         alreadyFeatured: {
             'Queue Added Date': 'Torrent Link',
@@ -47,6 +47,8 @@
             'Jan 12, 2025 12:18 am': 'https://www.torrentbd.net/torrents-details.php?id=1222217',
             'Jan 20, 2025 12:27 am': 'https://www.torrentbd.net/torrents-details.php?id=1190428',
             'Jan 29, 2025 12:11 am': 'https://www.torrentbd.net/torrents-details.php?id=1172783',
+            'Feb 06, 2025 12:19 am': 'https://www.torrentbd.net/torrents-details.php?id=1222972',
+            'Feb 15, 2025 01:04 am': 'https://www.torrentbd.net/torrents-details.php?id=1176150',
         }
     }
 
@@ -132,7 +134,7 @@
             } else {
                 localStorage.removeItem(lastNameChageDate);
             }
-            const titleForUsernameHiddenElement = `Current redeem will cost ${newNameCost} SeedBonus.${ nameLastChangedOn ? ` Username last changed on ${nameLastChangedOn}.` : ' [Visit Seedbonus Shop once to get Last Name Change Date]'}`;
+            const titleForUsernameHiddenElement = `Current redeem will cost ${newNameCost} SeedBonus.${ nameLastChangedOn ? ` Username last changed on ${nameLastChangedOn}.` : ' [Visit Seedbonus History Page once to get Last Name Change Date]'}`;
             if(newNameCost) {
                 newNameContentElement.innerHTML = `
                  <div style="display: grid; height: 96px;"
@@ -277,7 +279,8 @@
                 if(!sbBreakdownTableElement) throw new Error('SeedBonus Breakdown Table Not Found!');
 
                 const currSeedingRows = Array.from(sbBreakdownTableElement.querySelectorAll('tr')).filter(tr => !isNaN(+tr.lastElementChild.innerText)),
-                      smallTorrentCount = parseInt(document.querySelector('.uc-seeding').innerText) - currSeedingRows.length;
+                      smallTorrentCount = parseInt(document.querySelector('.uc-seeding').innerText) - currSeedingRows.length,
+                      isDarkThemeActive = document.querySelector('.theme-toggle-btn')?.getAttribute('data-tippy-content').toLowerCase().includes('bright') || false;
 
                 const tableData = {
                     '100M-': {size: 'size < 100 MiB', sbRate: 0, count: !isNaN(smallTorrentCount) ? smallTorrentCount : 0, currentRateTotal: 0},
@@ -317,10 +320,10 @@
 
                 const table = document.createElement('table');
                 table.classList = 'table boxed striped simple-data-table ';
-                table.style = 'width: 65%; min-width: 720px; margin-left: auto; margin-right: auto; margin-bottom: 28px;';
-                table.innerHTML = `<caption style='font-size: 24px; font-weight: 700; margin-bottom: 12px;' class='tbdrank supreme'>Summary</caption>
+                table.style = 'width: 65%; min-width: 720px; margin-left: auto; margin-right: auto; padding-bottom: 28px;';
+                table.innerHTML = `<caption style='font-size: 24px; font-weight: 700; margin-bottom: 12px;' class='tbdrank ${ isDarkThemeActive ? 'supreme' : 'vip' }'>Summary</caption>
                            <thead>
-                                <tr style='background-color: #2a2a2a;'>
+                                <tr style='${ isDarkThemeActive ? "background-color: #2a2a2a;" : "" }'>
                                      <th style='padding: 5px; text-align: center;'>Torrent Size</th>
                                      <th style='padding: 5px; text-align: center;'>Maximum SB<br />Per Torrent</th>
                                      <th style='padding: 5px; text-align: center;'>Torrent Count</th>
@@ -330,12 +333,12 @@
                            </thead>
                            <tbody>
                                 ${createSBRateSummeryTableBody(tableData)}
-                                <tr style='font-weight: 700; background-color: #2a2a2a;'>
+                                <tr style='font-weight: 700;${ isDarkThemeActive ? " background-color: #2a2a2a;" : "" }'>
                                      <td style='padding: 5px; padding-left: 8px; font-size: 1.25rem;' colspan='2'>Total</th>
                                      <td style='padding: 5px; text-align: center; color: #66bb6a;'
                                          title='This total may not count torrents less than 100MiB'>↑ ${ Object.keys(tableData).reduce((torrCount, curr) => torrCount + tableData[curr].count, 0) }</th>
                                      <td style='padding: 5px; text-align: center;'>${ new Intl.NumberFormat("en-IN").format(tableObjKeys.reduce((total, curr) => total + tableData[curr].count * tableData[curr].sbRate, 0)) }</th>
-                                     <td style='padding: 5px; text-align: right; padding-right: 8px; font-size: 1.25rem;' class='tbdrank vip'
+                                     <td style='padding: 5px; text-align: right; padding-right: 8px; font-size: 1.25rem;' class='tbdrank ${ isDarkThemeActive ? 'vip' : 'supreme' }'
                                          title='This is your current SeedBonus rate (Value may vary upto ±0.1%)'>&#8776 <span style='text-decoration: underline;'>
                                      ${ new Intl.NumberFormat("en-IN").format(+currSeedingRows.map(tr => +tr.lastElementChild.innerText)
                                                                              .reduce((acc, curr) => acc+curr, 0).toFixed(1)) }</span>
