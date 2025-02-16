@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         TeaBD: << NotPlex >> Customizations
 // @namespace    http://tampermonkey.net/
-// @version      2.5.2
+// @version      2.6
 // @description  More options in Menu Bar. Replace unnecessary content. Proper file type in Torrent Upload Page. Neighbours (Profile/Torrent). SB Summary Table.
 // @author       NotPlex
 // @match        https://www.torrentbd.net/*
@@ -14,6 +14,20 @@
     'use strict';
 
     // Your code here...
+
+    /******************* Featured Torrent *******************/
+    const tbdFeature = {
+        isActive: false,
+        nextTorrent: '', // Next Torrent Title
+        readyToBeQueued: {
+            'Torrent Title': 'Torrent Link',
+            '': '',
+        },
+        alreadyFeatured: {
+            'Queue Added Date': 'Torrent Link',
+            '': '',
+        }
+    }
 
     /****************** Utility Start ******************/
     const lastNameChageDate = 'uNameData';
@@ -28,29 +42,27 @@
         if(!checkString) return false;
         return window.location.pathname.includes(checkString);
     }
-    /******************* Utility End *******************/
-
-    const tbdFeature = {
-        isActive: false,
-        nextTorrent: 'Yo Yo Honey Singh: Famous 2024 1080p WEBRip AAC5.1 x264 ESub-HDHub4u', // Next Torrent Title
-        readyToBeQueued: {
-            'Torrent Title': 'Torrent Link',
-            'Yo Yo Honey Singh: Famous 2024 1080p WEBRip AAC5.1 x264 ESub-HDHub4u': 'https://www.torrentbd.net/torrents-details.php?id=1226781',
-        },
-        alreadyFeatured: {
-            'Queue Added Date': 'Torrent Link',
-            'May 26, 2023 06:14 am': 'https://www.torrentbd.net/torrents-details.php?id=1116900',
-            'Dec 22, 2023 08:53 am': 'https://www.torrentbd.net/torrents-details.php?id=1150381',
-            'Dec 12, 2024 03:38 am': 'https://www.torrentbd.net/torrents-details.php?id=1189363',
-            'Dec 26, 2024 11:58 pm': 'https://www.torrentbd.net/torrents-details.php?id=1182875',
-            'Jan 03, 2025 12:54 pm': 'https://www.torrentbd.net/torrents-details.php?id=1173263',
-            'Jan 12, 2025 12:18 am': 'https://www.torrentbd.net/torrents-details.php?id=1222217',
-            'Jan 20, 2025 12:27 am': 'https://www.torrentbd.net/torrents-details.php?id=1190428',
-            'Jan 29, 2025 12:11 am': 'https://www.torrentbd.net/torrents-details.php?id=1172783',
-            'Feb 06, 2025 12:19 am': 'https://www.torrentbd.net/torrents-details.php?id=1222972',
-            'Feb 15, 2025 01:04 am': 'https://www.torrentbd.net/torrents-details.php?id=1176150',
-        }
+    const checkValidQuery = (searchFor = 'action', value = '') => {
+        const urlSearchQuery = window.location.search;
+        const isValidQuery = new URLSearchParams(window.location.search).get(searchFor).toLowerCase() === value.toLowerCase();
+        return isValidQuery;
     }
+    const doesPathnameIncludes = (checkString) => {
+        const pathname = window.location.pathname;
+        return pathname.toLowerCase().includes(checkString.toLowerCase());
+    }
+    const createNeighbourVisitBtn = (id) => {
+        const idType = doesPathnameIncludes('account') ? 'Account' : doesPathnameIncludes('torrent') ? 'Torrent' : 'Forum Topic';
+        const aHref = doesPathnameIncludes('account') ? 'account-details' : doesPathnameIncludes('torrent') ? 'torrents-details' : 'forums';
+        return `<a href='/${ aHref }.php?${ idType === 'Forum' ? 'action=viewtopic&topicid' : 'id' }=${ id - 1 > 0 ? id - 1 : 1 }' class='otp-btn' title='Previous ${ idType }'>◄◄ ${ id - 1 > 0 ? 'Previous' : `Go to first ${idType.toLowerCase()}` }</a>
+                     <span title="Click to copy current ${idType} ID"
+                           class='otp-btn otp-btn-hovered otp-mx-1.25'
+                           onclick="navigator.clipboard.writeText('${ idType } ID: ${id}'); alert('${idType} ID #${id} copied.');">
+                                Current ${idType} #${id}
+                           </span>
+                     <a href='/${ aHref }.php?${ aHref === 'forums' ? 'action=viewtopic&topicid' : 'id' }=${id + 1 > 0 ? id + 1 : 1}' class='otp-btn' title='Next ${idType}'>Next ►►</a>`;
+    }
+    /******************* Utility End *******************/
 
     // Add More Options (Direct Links) to Menu Bar
     if(userId) {
@@ -170,7 +182,7 @@
     }
 
     // Visit Neighbour Profile or Torrent
-    if(checkValidPage('account-details.php') || checkValidPage('torrents-details.php')) {
+    if(checkValidPage('account-details.php') || checkValidPage('torrents-details.php') || checkValidPage('forums.php')) {
         const otpStyle = `
             .otp-flex {
                  display: flex;
@@ -214,43 +226,49 @@
         style.textContent = otpStyle;
         head.appendChild(style);
         const cnavElement = document.querySelector('.cnav'); // Navigation Bar
-        const idInURL = parseInt(new URLSearchParams(window.location.search).get('id'));
 
-        // Visit Neighbour Account
-        if(checkValidPage('account-details.php')) {
-            const currAccIdURL = idInURL;
-            if(!currAccIdURL) window.location.replace(`/account-details.php?id=${userId}`);
-            const currAccId = currAccIdURL || userId || 3559;
+        if(checkValidPage('account-details.php') || checkValidPage('torrents-details.php')) {
 
-            insertDivInPosition({
-                classList: 'otp-my-auto otp-hidden',
-                innerHTML: `<a href='/account-details.php?id=${currAccId - 1 > 0 ? currAccId - 1 : 1}' class='otp-btn' title='Previous Profile'>◄◄ ${currAccId - 1 > 0 ? 'Previous' : 'Go to first account'}</a>
-                     <span title="Click to copy current profile ID"
-                           class='otp-btn otp-btn-hovered otp-mx-1.25'
-                           onclick="navigator.clipboard.writeText('Torrent ID: ${currAccId}'); alert('Account ID #${currAccId} copied.');">
-                                Current Profile #${currAccId}
-                           </span>
-                     <a href='/account-details.php?id=${currAccId + 1 > 0 ? currAccId + 1 : 1}' class='otp-btn' title='Next Profile'>Next ►►</a>`,
-                parentNode: cnavElement,
-                childrenNo: 3,
-            });
+            const idInURL = parseInt(new URLSearchParams(window.location.search).get('id'));
+
+            // Visit Neighbour Account
+            if(checkValidPage('account-details.php')) {
+                const currAccIdURL = idInURL;
+                if(!currAccIdURL) window.location.replace(`/account-details.php?id=${userId}`);
+                const currAccId = currAccIdURL || userId || 3559;
+
+                insertDivInPosition({
+                    classList: 'otp-my-auto otp-hidden',
+                    innerHTML: createNeighbourVisitBtn(currAccId),
+                    parentNode: cnavElement,
+                    childrenNo: 3,
+                });
+            }
+
+            // Visit Neighbour Uploaded Torrent
+            if(checkValidPage('torrents-details.php')) {
+                const currTorrIdURL = idInURL;
+                if(!currTorrIdURL) window.location.replace('/torrents-details.php?id=1');
+                const currTorrId = currTorrIdURL || 1;
+
+                insertDivInPosition({
+                    classList: 'otp-my-auto otp-hidden',
+                    innerHTML: createNeighbourVisitBtn(currTorrId),
+                    parentNode: cnavElement,
+                    childrenNo: 3,
+                });
+            }
         }
 
-        // Visit Neighbour Uploaded Torrent
-        if(checkValidPage('torrents-details.php')) {
-            const currTorrIdURL = idInURL;
-            if(!currTorrIdURL) window.location.replace('/torrents-details.php?id=1');
-            const currTorrId = currTorrIdURL || 1;
+        // Visit Neighbour Forum Topic
+        else if(checkValidPage('forums.php') && checkValidQuery('action', 'viewtopic')) {
+            const currForumTopicId = parseInt(new URLSearchParams(window.location.search).get('topicid'));
+            if(!currForumTopicId) window.location.replace('/forums.php');
+            const currForumId = currForumTopicId || 1;
 
             insertDivInPosition({
                 classList: 'otp-my-auto otp-hidden',
-                innerHTML: `<a href='/torrents-details.php?id=${currTorrId - 1 > 0 ? currTorrId - 1 : 1}' class='otp-btn' title='Previous Torrent'>◄◄ ${currTorrId - 1 > 0 ? 'Previous' : 'Go to first Torrent'}</a>
-                     <span title="Click to copy current torrent ID"
-                           class='otp-btn otp-btn-hovered otp-mx-1.25'
-                           onclick="navigator.clipboard.writeText('Torrent ID: ${currTorrId}'); alert('Torrent ID #${currTorrId} copied.');">
-                                Current Torrent #${currTorrId}
-                           </span>
-                     <a href='/torrents-details.php?id=${ currTorrId + 1 > 0 ? currTorrId + 1 : 1 }' class='otp-btn' title='Next Torrent'>Next ►►</a>`,
+                innerHTML: createNeighbourVisitBtn(currForumId),
                 parentNode: cnavElement,
                 childrenNo: 3,
             });
@@ -341,7 +359,7 @@
                                      <td style='padding: 5px; text-align: right; padding-right: 8px; font-size: 1.25rem;' class='tbdrank ${ isDarkThemeActive ? 'vip' : 'supreme' }'
                                          title='This is your current SeedBonus rate (Value may vary upto ±0.1%)'>&#8776 <span style='text-decoration: underline;'>
                                      ${ new Intl.NumberFormat("en-IN").format(+currSeedingRows.map(tr => +tr.lastElementChild.innerText)
-                                                                             .reduce((acc, curr) => acc+curr, 0).toFixed(1)) }</span>
+                                                                              .reduce((acc, curr) => acc+curr, 0).toFixed(1)) }</span>
                                      </td>
                                 </tr>
                            </tbody>`;
