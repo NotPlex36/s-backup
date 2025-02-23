@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         TeaBD: << NotPlex >> Customizations
 // @namespace    http://tampermonkey.net/
-// @version      2.6
-// @description  More options in Menu Bar. Replace unnecessary content. Proper file type in Torrent Upload Page. Neighbours (Profile/Torrent). SB Summary Table.
+// @version      2.6.4
+// @description  More options in Menu Bar. Replace unnecessary content. Proper file type in Torrent Upload Page. Neighbours (Profile/Torrent/Forum/Request). SB Summary Table.
 // @author       NotPlex
 // @match        https://www.torrentbd.net/*
 // @match        https://www.torrentbd.org/*
@@ -18,18 +18,31 @@
     /******************* Featured Torrent *******************/
     const tbdFeature = {
         isActive: false,
-        nextTorrent: '', // Next Torrent Title
+        nextTorrent: 'Yo Yo Honey Singh: Famous 2024 1080p WEBRip AAC5.1 x264 ESub-HDHub4u', // Next Torrent Title
         readyToBeQueued: {
             'Torrent Title': 'Torrent Link',
-            '': '',
+            'Yo Yo Honey Singh: Famous 2024 1080p WEBRip AAC5.1 x264 ESub-HDHub4u': 'https://www.torrentbd.net/torrents-details.php?id=1226781',
+            'Bad Boys: Ride or Die 2024 720p WEBRip Dual-Audio AAC5.1 x264 ESub-HDHub4u': 'https://www.torrentbd.net/torrents-details.php?id=1189365',
         },
         alreadyFeatured: {
             'Queue Added Date': 'Torrent Link',
-            '': '',
+            'May 26, 2023 06:14 am': 'https://www.torrentbd.net/torrents-details.php?id=1116900',
+            'Dec 22, 2023 08:53 am': 'https://www.torrentbd.net/torrents-details.php?id=1150381',
+            'Dec 12, 2024 03:38 am': 'https://www.torrentbd.net/torrents-details.php?id=1189363',
+            'Dec 26, 2024 11:58 pm': 'https://www.torrentbd.net/torrents-details.php?id=1182875',
+            'Jan 03, 2025 12:54 pm': 'https://www.torrentbd.net/torrents-details.php?id=1173263',
+            'Jan 12, 2025 12:18 am': 'https://www.torrentbd.net/torrents-details.php?id=1222217',
+            'Jan 20, 2025 12:27 am': 'https://www.torrentbd.net/torrents-details.php?id=1190428',
+            'Jan 29, 2025 12:11 am': 'https://www.torrentbd.net/torrents-details.php?id=1172783',
+            'Feb 06, 2025 12:19 am': 'https://www.torrentbd.net/torrents-details.php?id=1222972',
+            'Feb 15, 2025 01:04 am': 'https://www.torrentbd.net/torrents-details.php?id=1176150',
         }
     }
 
     /****************** Utility Start ******************/
+    /****************** Utility Start ******************/
+    /****************** Utility Start ******************/
+
     const lastNameChageDate = 'uNameData';
     const userId = parseInt(new URLSearchParams(document.querySelector('#left-block-container .accc.account-action-buttons a[data-tippy-content="My Profile"]')?.href.split('.php')[1]).get('id'));
     const insertDivInPosition = ({classList, innerHTML, parentNode, childrenNo}) => {
@@ -44,7 +57,7 @@
     }
     const checkValidQuery = (searchFor = 'action', value = '') => {
         const urlSearchQuery = window.location.search;
-        const isValidQuery = new URLSearchParams(window.location.search).get(searchFor).toLowerCase() === value.toLowerCase();
+        const isValidQuery = new URLSearchParams(window.location.search).get(searchFor)?.toLowerCase() === value.toLowerCase();
         return isValidQuery;
     }
     const doesPathnameIncludes = (checkString) => {
@@ -52,17 +65,35 @@
         return pathname.toLowerCase().includes(checkString.toLowerCase());
     }
     const createNeighbourVisitBtn = (id) => {
-        const idType = doesPathnameIncludes('account') ? 'Account' : doesPathnameIncludes('torrent') ? 'Torrent' : 'Forum Topic';
-        const aHref = doesPathnameIncludes('account') ? 'account-details' : doesPathnameIncludes('torrent') ? 'torrents-details' : 'forums';
-        return `<a href='/${ aHref }.php?${ idType === 'Forum' ? 'action=viewtopic&topicid' : 'id' }=${ id - 1 > 0 ? id - 1 : 1 }' class='otp-btn' title='Previous ${ idType }'>◄◄ ${ id - 1 > 0 ? 'Previous' : `Go to first ${idType.toLowerCase()}` }</a>
+        const types = ['Account', 'Torrent', 'Forum Topic', 'Request'];
+        const idType = doesPathnameIncludes('account') ? types[0] : doesPathnameIncludes('torrent') ? types[1] : doesPathnameIncludes('forums') ? types[2] : types[3];
+        const aHref = idType === types[0] ? 'account-details.php?id=' : idType === types[1] ? 'torrents-details.php?id=' : idType === types[2] ? 'forums.php?action=viewtopic&topicid=' : 'requests.php?module=show&id=';
+        return `<a href='/${ aHref }${ id - 1 > 0 ? id - 1 : 1 }' class='otp-btn' title='Previous ${ idType }'>◄◄ ${ id - 1 > 0 ? 'Previous' : `Go to first ${idType.toLowerCase()}` }</a>
                      <span title="Click to copy current ${idType} ID"
                            class='otp-btn otp-btn-hovered otp-mx-1.25'
                            onclick="navigator.clipboard.writeText('${ idType } ID: ${id}'); alert('${idType} ID #${id} copied.');">
                                 Current ${idType} #${id}
                            </span>
-                     <a href='/${ aHref }.php?${ aHref === 'forums' ? 'action=viewtopic&topicid' : 'id' }=${id + 1 > 0 ? id + 1 : 1}' class='otp-btn' title='Next ${idType}'>Next ►►</a>`;
+                     <a href='/${ aHref }${id + 1 > 0 ? id + 1 : 1}' class='otp-btn' title='Next ${idType}'>Next ►►</a>`;
     }
+
+    const addNeighbourBtn = (currId) => {
+        const cnavElement = document.querySelector('.cnav'); // Navigation Bar
+        insertDivInPosition({
+            classList: 'otp-my-auto otp-hidden',
+            innerHTML: createNeighbourVisitBtn(currId),
+            parentNode: cnavElement,
+            childrenNo: 3,
+        });
+    }
+
     /******************* Utility End *******************/
+    /******************* Utility End *******************/
+    /******************* Utility End *******************/
+
+    /******************************************************************* Custom Functionality Starts Here ***************************************************************************/
+    /******************************************************************* Custom Functionality Starts Here ***************************************************************************/
+    /******************************************************************* Custom Functionality Starts Here ***************************************************************************/
 
     // Add More Options (Direct Links) to Menu Bar
     if(userId) {
@@ -94,14 +125,12 @@
         // Get Username Change Date and Set to Browser Local Storage
         if(checkValidPage('seedbonus-history.php')) {
             Array.from(document.querySelectorAll("#middle-block table.bordered.simple-data-table tbody tr td")).some(td => {
-                let temp = false;
                 if(td.innerText == 'Username') {
                     const username = document.querySelector("#left-block-container>div .tbdrank").innerText;
                     const nameLastChangedOn = td.parentNode.children[0].innerText;
                     localStorage.setItem(lastNameChageDate, JSON.stringify({username, nameLastChangedOn}));
-                    temp = true;
+                    return true; // this "true" value will break the ".some" loop methode for this array
                 }
-                if(temp) return temp;
             });
         }
 
@@ -182,7 +211,7 @@
     }
 
     // Visit Neighbour Profile or Torrent
-    if(checkValidPage('account-details.php') || checkValidPage('torrents-details.php') || checkValidPage('forums.php')) {
+    if(checkValidPage('account-details.php') || checkValidPage('torrents-details.php') || checkValidPage('forums.php') || checkValidPage('requests.php')) {
         const otpStyle = `
             .otp-flex {
                  display: flex;
@@ -225,9 +254,8 @@
         const style = document.createElement('style');
         style.textContent = otpStyle;
         head.appendChild(style);
-        const cnavElement = document.querySelector('.cnav'); // Navigation Bar
 
-        if(checkValidPage('account-details.php') || checkValidPage('torrents-details.php')) {
+        if(checkValidPage('account-details.php') || checkValidPage('torrents-details.php') || checkValidPage('requests.php')) {
 
             const idInURL = parseInt(new URLSearchParams(window.location.search).get('id'));
 
@@ -236,27 +264,23 @@
                 const currAccIdURL = idInURL;
                 if(!currAccIdURL) window.location.replace(`/account-details.php?id=${userId}`);
                 const currAccId = currAccIdURL || userId || 3559;
-
-                insertDivInPosition({
-                    classList: 'otp-my-auto otp-hidden',
-                    innerHTML: createNeighbourVisitBtn(currAccId),
-                    parentNode: cnavElement,
-                    childrenNo: 3,
-                });
+                addNeighbourBtn(currAccId);
             }
 
             // Visit Neighbour Uploaded Torrent
-            if(checkValidPage('torrents-details.php')) {
+            else if(checkValidPage('torrents-details.php')) {
                 const currTorrIdURL = idInURL;
                 if(!currTorrIdURL) window.location.replace('/torrents-details.php?id=1');
                 const currTorrId = currTorrIdURL || 1;
+                addNeighbourBtn(currTorrId);
+            }
 
-                insertDivInPosition({
-                    classList: 'otp-my-auto otp-hidden',
-                    innerHTML: createNeighbourVisitBtn(currTorrId),
-                    parentNode: cnavElement,
-                    childrenNo: 3,
-                });
+            // Visit Neighbour Torrent Request
+            else if(checkValidPage('requests.php') && checkValidQuery('module', 'show')) {
+                const currRequestId = idInURL;
+                if(!currRequestId) window.location.replace('/forums.php');
+                const currReqId = currRequestId || 1;
+                addNeighbourBtn(currReqId);
             }
         }
 
@@ -265,13 +289,11 @@
             const currForumTopicId = parseInt(new URLSearchParams(window.location.search).get('topicid'));
             if(!currForumTopicId) window.location.replace('/forums.php');
             const currForumId = currForumTopicId || 1;
+            addNeighbourBtn(currForumId);
+        }
 
-            insertDivInPosition({
-                classList: 'otp-my-auto otp-hidden',
-                innerHTML: createNeighbourVisitBtn(currForumId),
-                parentNode: cnavElement,
-                childrenNo: 3,
-            });
+        else {
+            console.log('No Match Found');
         }
     }
 
@@ -321,25 +343,21 @@
                           size = parseFloat(sizeText);
                     if(sizeText.includes('GiB')) {
                         if(size < 2) {
-                            // count 1-2G
-                            modifyTableData(tableObjKeys[2], currTrSBRate);
+                            modifyTableData(tableObjKeys[2], currTrSBRate); // count 1-2G
                         } else if(size < 5) {
-                            // count 2-5G
-                            modifyTableData(tableObjKeys[3], currTrSBRate);
+                            modifyTableData(tableObjKeys[3], currTrSBRate); // count 2-5G
                         } else {
-                            // count 5G+
-                            modifyTableData(tableObjKeys[4], currTrSBRate);
+                            modifyTableData(tableObjKeys[4], currTrSBRate); // count 5G+
                         }
                     } else {
-                        // count 100M-1G
-                        modifyTableData(tableObjKeys[1], currTrSBRate);
+                        modifyTableData(tableObjKeys[1], currTrSBRate); // count 100M-1G
                     }
                 });
 
                 const table = document.createElement('table');
                 table.classList = 'table boxed striped simple-data-table ';
                 table.style = 'width: 65%; min-width: 720px; margin-left: auto; margin-right: auto; padding-bottom: 28px;';
-                table.innerHTML = `<caption style='font-size: 24px; font-weight: 700; margin-bottom: 12px;' class='tbdrank ${ isDarkThemeActive ? 'supreme' : 'vip' }'>Summary</caption>
+                table.innerHTML = `<caption style='font-size: 24px; font-weight: 700; margin-bottom: 12px;' class='tbdrank ${ isDarkThemeActive ? 'supreme' : 'vip' }'>Your SeedBonus (SB) Summary</caption>
                            <thead>
                                 <tr style='${ isDarkThemeActive ? "background-color: #2a2a2a;" : "" }'>
                                      <th style='padding: 5px; text-align: center;'>Torrent Size</th>
@@ -357,7 +375,7 @@
                                          title='This total may not count torrents less than 100MiB'>↑ ${ Object.keys(tableData).reduce((torrCount, curr) => torrCount + tableData[curr].count, 0) }</th>
                                      <td style='padding: 5px; text-align: center;'>${ new Intl.NumberFormat("en-IN").format(tableObjKeys.reduce((total, curr) => total + tableData[curr].count * tableData[curr].sbRate, 0)) }</th>
                                      <td style='padding: 5px; text-align: right; padding-right: 8px; font-size: 1.25rem;' class='tbdrank ${ isDarkThemeActive ? 'vip' : 'supreme' }'
-                                         title='This is your current SeedBonus rate (Value may vary upto ±0.1%)'>&#8776 <span style='text-decoration: underline;'>
+                                         title='This is your current SeedBonus rate (Accuracy may vary upto ±0.1%)'>&#8776 <span style='text-decoration: underline;'>
                                      ${ new Intl.NumberFormat("en-IN").format(+currSeedingRows.map(tr => +tr.lastElementChild.innerText)
                                                                               .reduce((acc, curr) => acc+curr, 0).toFixed(1)) }</span>
                                      </td>
